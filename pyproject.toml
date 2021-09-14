@@ -1,0 +1,6 @@
+[build-system]
+requires = [
+    "modbus-tk",
+    "pyserial"
+]
+build-backend = "setuptools.build_meta"

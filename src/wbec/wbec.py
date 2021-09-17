@@ -17,86 +17,69 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-## Description :  Initial code file for RTU Master communication to WBEC
+## Description :  Representation of WBEC in Python
 #
 ## Author      :  Sven Ebenfeld
 #
-## Date        :  2021.09.14
+## Date        :  2021.09.17
 #
 ##################################################################################################
 
-import serial
-import fcntl
-import os
-import struct
-import termios
-import array
-import modbus_tk
-import modbus_tk.defines as cst
-import modbus_tk.modbus as modbus
-#import modbus_tk.modbus_rtu as modbus_rtu
-from modbus_tk import modbus_rtu
+from enum import Enum
+from array import array
 
-# RS485 ioctls define
-TIOCGRS485 = 0x542E
-TIOCSRS485 = 0x542F
-SER_RS485_ENABLED = 0b00000001
-SER_RS485_RTS_ON_SEND = 0b00000010
-SER_RS485_RTS_AFTER_SEND = 0b00000100
-SER_RS485_RX_DURING_TX = 0b00010000
-# rs 485 port
-ser1 = serial.Serial("/dev/ttySC0",9600)
-ser2 = serial.Serial("/dev/ttySC1",9600)
+class ChargingState(Enum):
+    DEFAULT = 1
+    A1 = 2
+    A2 = 3
+    B1 = 4
+    B2 = 5
+    C1 = 6
+    C2 = 7
+    DERATING = 8
+    E = 9
+    F = 10
+    ERR = 11
 
-def rs485_enable():
-    buf = array.array('i', [0] * 8) # flags, delaytx, delayrx, padding
-    #enable 485 chanel 1
-    fcntl.ioctl(ser1, TIOCGRS485, buf)
-    buf[0] |=  SER_RS485_ENABLED|SER_RS485_RTS_AFTER_SEND
-    buf[1]  = 0
-    buf[2]  = 0
-    fcntl.ioctl(ser1, TIOCSRS485, buf)
+class LockState(Enum):
+    LOCKED = 0
+    UNLOCKED = 1
 
-    #enable 485 chanel 2
-    fcntl.ioctl(ser2, TIOCGRS485, buf)
-    buf[0] |=  SER_RS485_ENABLED|SER_RS485_RTS_AFTER_SEND
-    buf[1]  = 0
-    buf[2]  = 0
-    fcntl.ioctl(ser2, TIOCSRS485, buf)
-#end of rs485_enable():
+class StandbyFunction(Enum):
+    ENABLED = 0
+    DISABLED = 4
 
+class Wbec:
+    def __init__(self, name, busId, minCurrent= 6, maxCurrent = 6, layout = 0x108):
+        self.name = name
+        self.busId = busId
+        self.minCurrent = minCurrent
+        self.maxCurrent = maxCurrent
+        self.layout = layout
 
-if __name__ == '__main__':
-
-    logger = modbus_tk.utils.create_logger("console")
-
-    rs485_enable()
-
-    #set modbus master
-    master = modbus_rtu.RtuMaster(
-           serial.Serial(port= '/dev/ttySC0',
-           baudrate=19200,
-           bytesize=8,
-           parity='E',
-           stopbits=1,
-           xonxoff=0)
-       )
-
-    master.set_timeout(5.0)
-    master.set_verbose(True)
-    logger.info("connected")
-
-    logger.info(master.execute(1, cst.READ_HOLDING_REGISTERS, 0, 4))
-
-    #send some queries
-    #logger.info(master.execute(1, cst.READ_COILS, 0, 10))
-    #logger.info(master.execute(1, cst.READ_DISCRETE_INPUTS, 0, 8))
-    #logger.info(master.execute(1, cst.READ_INPUT_REGISTERS, 100, 3))
-    #logger.info(master.execute(1, cst.READ_HOLDING_REGISTERS, 100, 12))
-    #logger.info(master.execute(1, cst.WRITE_SINGLE_COIL, 7, output_value=1))
-    #logger.info(master.execute(1, cst.WRITE_SINGLE_REGISTER, 100, output_value=54))
-    #logger.info(master.execute(1, cst.WRITE_MULTIPLE_COILS, 0, output_value=[1, 1, 0, 1, 1, 0, 1, 1]))
-    #logger.info(master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 100, output_value=xrange(12)))
-
-#end of if __name__ == '__main__':
-
+        self.chargingState = ChargingState.DEFAULT
+        self.l1Current = 0.0
+        self.l2Current = 0.0
+        self.l3Current = 0.0
+        self.pcbTemperature = 0.0
+        self.l1Voltage = 0
+        self.l2Voltage = 0
+        self.l3Voltage = 0
+        self.externLockState = LockState.UNLOCKED
+        self.power = 0
+        self.energySincePowerOn = 0
+        self.energySinceInstallation = 0
+        self.logistic = ""
+        self.hardwareVariant = 0
+        self.applicationSoftware = 0
+        self.diagnosticData = array('H')
+        for x in range(18):
+            self.diagnosticData.append(0)
+        self.errorMemory = array('h')
+        for x in range(319):
+            self.errorMemory.append(0)
+        self.masterWatchdogTimeout = 15000
+        self.standByFunction = StandbyFunction.ENABLED
+        self.remoteLock = LockState.UNLOCKED
+        self.maximumCurrentCommand = 0
+        self.failsafeCurrent = 0

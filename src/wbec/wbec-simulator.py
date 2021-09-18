@@ -77,7 +77,18 @@ class WbecModbus:
     
     def initializeModbus(self):
         follower = self.rtu_follower
-        follower.add_block()
+        for x in range(1,18):
+            follower.add_block(x, cst.ANALOG_INPUTS, x, 4)
+        follower.add_block(100, cst.ANALOG_INPUTS, 100, 4)
+        follower.add_block(101, cst.ANALOG_INPUTS, 101, 4)
+        for x in range(102,133):
+            follower.add_block(x, cst.ANALOG_INPUTS, x, 2)
+        follower.add_block(200, cst.ANALOG_INPUTS, 200, 4)
+        follower.add_block(201, cst.ANALOG_INPUTS, 203, 4)
+        for x in range(300,318):
+            follower.add_block(x, cst.ANALOG_INPUTS, x, 4)
+        for x in range(500,819):
+            follower.add_block(x, cst.ANALOG_INPUTS, x, 4)
        
 
 if __name__ == '__main__':

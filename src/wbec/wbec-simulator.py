@@ -74,6 +74,10 @@ class WbecModbus:
     def __init__(self, wallbox, rtu_follower):
         self.wallbox = wallbox
         self.rtu_follower = rtu_follower
+    
+    def initializeModbus(self):
+        follower = self.rtu_follower
+        follower.add_block()
        
 
 if __name__ == '__main__':

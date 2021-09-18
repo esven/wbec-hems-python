@@ -41,13 +41,31 @@ class ChargingState(Enum):
     F = 10
     ERR = 11
 
+    def describe(self):
+        return self.name, self.value
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
 class LockState(Enum):
     LOCKED = 0
     UNLOCKED = 1
 
+    def describe(self):
+        return self.name, self.value
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
 class StandbyFunction(Enum):
     ENABLED = 0
     DISABLED = 4
+
+    def describe(self):
+        return self.name, self.value
+
+    def __str__(self):
+        return '{0}'.format(self.name)
 
 class Wbec:
     def __init__(self, name, busId, minCurrent= 6, maxCurrent = 6, layout = 0x108):

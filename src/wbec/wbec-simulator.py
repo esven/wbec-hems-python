@@ -113,8 +113,8 @@ if __name__ == '__main__':
 
         follower_1 = server.add_slave(1)
         wbmod = WbecModbus(Wbec("Wallbox 1", 1, 6, 16), follower_1)
+        wbmod.initializeModbus()
         followers.insert(1, wbmod)
-        follower_1.add_block('0', cst.HOLDING_REGISTERS, 0, 100)
         while True:
             cmd = sys.stdin.readline()
             args = cmd.split(' ')
@@ -123,10 +123,12 @@ if __name__ == '__main__':
                 sys.stdout.write('bye-bye\r\n')
                 break
 
-            elif args[0] == 'add_follower':
-                follower_id = int(args[1])
-                server.add_slave(follower_id)
-                sys.stdout.write('done: follower %d added\r\n' % (follower_id))
+            elif args[0] == 'add_wbec':
+                follower_id = len(followers)
+                wbmod = WbecModbus(Wbec("Wallbox %d" % follower_id, 1, 6, 16), server.add_slave(follower_id))
+                wbmod.initializeModbus()
+                followers.insert(follower_id, wbmod)
+                sys.stdout.write('done: follower wallbox %d added\r\n' % (follower_id))
 
             elif args[0] == 'add_block':
                 follower_id = int(args[1])

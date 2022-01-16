@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
         server.start()
 
-        followers = array()
+        followers = []
         followers.append(None)
 
         follower_1 = server.add_slave(1)
